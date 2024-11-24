@@ -18,6 +18,8 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
+#include <utils.h>
+#include <memory/vaddr.h>
 
 static int is_batch_mode = false;
 
@@ -49,10 +51,14 @@ static int cmd_c(char *args) {
 
 
 static int cmd_q(char *args) {
+  nemu_state.state = NEMU_QUIT;
   return -1;
 }
 
 static int cmd_help(char *args);
+static int cmd_s(char *args);
+static int cmd_info(char *args);
+static int cmd_x(char *args);
 
 static struct {
   const char *name;
@@ -62,6 +68,9 @@ static struct {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
+  { "s", "Step the program", cmd_s},
+  { "info", "Print program status infomation", cmd_info},
+  { "x", "scan the memory", cmd_x},
 
   /* TODO: Add more commands */
 
@@ -88,6 +97,59 @@ static int cmd_help(char *args) {
       }
     }
     printf("Unknown command '%s'\n", arg);
+  }
+  return 0;
+}
+
+static int cmd_s(char *args)
+{
+  char *arg = strtok(NULL, " ");
+  int step_count = 1;
+
+  if(arg != NULL) {
+    step_count = strtol(arg, NULL, 10);
+  }
+
+  cpu_exec(step_count);
+
+  return 0;
+}
+
+static int cmd_info(char *args)
+{
+  char *arg = strtok(NULL, " ");
+  if(strcmp(arg, "r") == 0) {
+    isa_reg_display();
+  }
+  return 0;
+}
+
+static int cmd_x(char *args)
+{
+  /* extract the argument count and expression */
+  char *arg_count = strtok(NULL, " ");
+  char *arg_exp = strtok(NULL, " ");
+
+  /* convert the string into numerical value */
+  int count = strtol(arg_count, NULL, 10);
+  vaddr_t addr = strtol(arg_exp, NULL, 0);
+
+  /* print 4 machine word in one line */
+  int i = 0;
+  word_t content;
+  for(i = 0; i < count; i++, addr+=4) {
+    if(i % 4 == 0 && i != 0) {
+      printf("\n");
+    }
+    if (i % 4 == 0) {
+      printf("0x%x:", addr);
+    }
+
+    content = vaddr_read(addr, 4);
+    printf("%08x  ", content);
+  }
+  if(i <= 8) {
+    printf("\n");
   }
   return 0;
 }
