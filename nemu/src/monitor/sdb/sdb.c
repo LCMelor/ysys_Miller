@@ -134,6 +134,11 @@ static int cmd_x(char *args)
   int count = strtol(arg_count, NULL, 10);
   vaddr_t addr = strtol(arg_exp, NULL, 0);
 
+  if(addr % 4 != 0) {
+    printf("The target address is not legal\n");
+    return 0;
+  }
+
   /* print 4 machine word in one line */
   int i = 0;
   word_t content;
@@ -148,7 +153,7 @@ static int cmd_x(char *args)
     content = vaddr_read(addr, 4);
     printf("%08x  ", content);
   }
-  if(i <= 8) {
+  if(i % 4 != 1) {
     printf("\n");
   }
   return 0;
