@@ -21,7 +21,7 @@
 #include <regex.h>
 
 enum {
-  TK_NOTYPE = 256, TK_EQ,
+  TK_NOTYPE = 256, TK_EQ, TK_NUM,
 
   /* TODO: Add more token types */
 
@@ -38,6 +38,12 @@ static struct rule {
 
   {" +", TK_NOTYPE},    // spaces
   {"\\+", '+'},         // plus
+  {"-", '-'},           // subtraction
+  {"\\*", '*'},         // multiplication
+  {"/", '/'},           // division
+  {"\\(", '('},           // left bracket
+  {"\\)", ')'},           // right bracket
+  {"[0-9]+", TK_NUM},   // number
   {"==", TK_EQ},        // equal
 };
 
@@ -67,8 +73,10 @@ typedef struct token {
   char str[32];
 } Token;
 
-static Token tokens[32] __attribute__((used)) = {};
+static Token tokens[3200] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
+
+static int eval(int l, int r);
 
 static bool make_token(char *e) {
   int position = 0;
@@ -84,19 +92,32 @@ static bool make_token(char *e) {
         char *substr_start = e + position;
         int substr_len = pmatch.rm_eo;
 
-        Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
-            i, rules[i].regex, position, substr_len, substr_len, substr_start);
+        // Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
+        //     i, rules[i].regex, position, substr_len, substr_len, substr_start);
 
-        position += substr_len;
 
         /* TODO: Now a new token is recognized with rules[i]. Add codes
          * to record the token in the array `tokens'. For certain types
          * of tokens, some extra actions should be performed.
          */
 
-        switch (rules[i].token_type) {
-          default: TODO();
+        // skip the notype
+        if (rules[i].token_type == TK_NOTYPE)
+        {
+          continue;
         }
+        
+        tokens[nr_token].type = rules[i].token_type;
+        Assert(substr_len <= 32, "The token length is too long");
+        strncpy(tokens[nr_token].str, substr_start, substr_len);
+        tokens[nr_token].str[substr_len] = '\0';
+        nr_token ++;
+
+        position += substr_len;
+
+        // switch (rules[i].token_type) {
+        //   default: TODO();
+        // }
 
         break;
       }
@@ -111,7 +132,6 @@ static bool make_token(char *e) {
   return true;
 }
 
-
 word_t expr(char *e, bool *success) {
   if (!make_token(e)) {
     *success = false;
@@ -119,7 +139,99 @@ word_t expr(char *e, bool *success) {
   }
 
   /* TODO: Insert codes to evaluate the expression. */
-  TODO();
+  return eval(0, nr_token - 1);
+}
 
-  return 0;
+static bool check_parentheses(int l, int r)
+{
+  // character stack
+   char stack[30];
+   int top = 0;
+
+    // if exp is surrounded by a match pair of parenthese
+   if(tokens[l].type == '(' && tokens[r].type == ')') {
+    // if encounter '(' then push it
+    // else if encouonter ')', checking the top whehter is '('
+    // if not, get an error
+    // if yes, pop it and continue
+      for(int i = l + 1; i < r; i++) {
+        if(tokens[i].type == '(') {
+          top++;
+          stack[top] = '(';
+        }
+        else if(tokens[i].type == ')') {
+          // detect ')' before '('
+          if(top == 0)
+            return false;
+          if(stack[top] == '(') {
+            top--;
+          }
+        }
+      }
+      // if stack is empey, then check successfully
+      if(top == 0)
+      return true;
+      else
+      return false;
+   }
+   else
+    return false; 
+}
+
+static int find_main_op(int l, int r)
+{
+  int l_parenthese = 0;
+  int main_op = l + 1;
+  // the far left and right side must not be operator
+  for(int i = l; i < r; i ++) {
+
+    if(tokens[i].type == '(') {
+      l_parenthese++;
+    }
+    else if(tokens[i].type == ')') {
+      l_parenthese--;
+    }
+    
+    // out of parenthese and detect operator
+    if(l_parenthese == 0 && 
+    (tokens[i].type == '+' || tokens[i].type == '-' || tokens[i].type == '*' || tokens[i].type == '/')) {
+      if( (tokens[main_op].type == '+' || tokens[main_op].type == '-') &&
+          (tokens[i].type == '*' || tokens[i].type == '/') ) 
+          {
+            continue;
+          }
+      main_op = i;
+    }
+  }
+
+  return main_op;
+}
+
+static int eval(int l, int r)
+{
+  if(l > r) {
+    Log("l:%d, r:%d", l ,r);
+    assert(0);
+  }
+  else if (l == r) {
+    return strtol(tokens[l].str, NULL, 10);
+  }
+  else if(check_parentheses(l, r) == true) {
+    return eval(l + 1, r - 1);
+  }
+  else {
+    int op = find_main_op(l, r);
+    
+    int val1 = eval(l, op - 1);
+    int val2 = eval(op + 1, r);
+
+    // var op represent index of main operator in tokens array
+    switch(tokens[op].type){
+      case '+': return val1 + val2; break;
+      case '-': return val1 - val2; break;
+      case '*': return val1 * val2; break;
+      case '/': return val1 / val2; break;
+      default: assert(0);
+    }
+  }
 }
