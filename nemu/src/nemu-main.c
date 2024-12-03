@@ -19,6 +19,7 @@ void init_monitor(int, char *[]);
 void am_init_monitor();
 void engine_start();
 int is_exit_status_bad();
+// expression test
 word_t expr(char *e, bool *success);
 
 int main(int argc, char *argv[]) {
@@ -29,6 +30,7 @@ int main(int argc, char *argv[]) {
   init_monitor(argc, argv);
 #endif
 
+/* -----------------expression test start ---------------------*/
   bool success;
   word_t exp_calcu_res;
   char exp_line[640];
@@ -38,19 +40,23 @@ int main(int argc, char *argv[]) {
   FILE *input = fopen("tools/gen-expr/input", "r");
 
   int i = 1;
-  while((fscanf(input,"%d %s", &exp_right_res, exp_line)) != EOF)
+  while((fgets(exp_line, 640, input)) != NULL)
   {
-    exp = strtok(exp_line, " ");
+    exp_right_res= strtol(strtok(exp_line, " "), NULL, 10);
+    // fgets() read the '\n' at the end of line
+    exp = strtok(NULL, "\n");
     exp_calcu_res = expr(exp, &success);
 
     if(!success) {
       Log("Expression %d error", i);
+      assert(0);
     }
     else if (exp_calcu_res == exp_right_res) {
       Log("Expression %d test PASS!", i);
     }
     else {
       Log("Test %d fail. Exp:%s", i, exp);
+      assert(0);
     }
 
     i++;
@@ -58,6 +64,7 @@ int main(int argc, char *argv[]) {
 
   fclose(input);
 
+/* -----------------expression test end ---------------------*/
   /* Start engine. */
   engine_start();
 

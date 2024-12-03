@@ -101,10 +101,12 @@ static bool make_token(char *e) {
          * of tokens, some extra actions should be performed.
          */
 
+        position += substr_len;
+        
         // skip the notype
         if (rules[i].token_type == TK_NOTYPE)
         {
-          continue;
+          break;
         }
         
         tokens[nr_token].type = rules[i].token_type;
@@ -113,7 +115,6 @@ static bool make_token(char *e) {
         tokens[nr_token].str[substr_len] = '\0';
         nr_token ++;
 
-        position += substr_len;
 
         // switch (rules[i].token_type) {
         //   default: TODO();
@@ -139,6 +140,7 @@ word_t expr(char *e, bool *success) {
   }
 
   /* TODO: Insert codes to evaluate the expression. */
+  *success = true;
   return eval(0, nr_token - 1);
 }
 

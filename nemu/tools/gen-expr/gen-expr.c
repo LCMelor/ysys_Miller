@@ -104,8 +104,18 @@ static void gen_rand_op()
   assert(buf_ptr < MAX_BUF);
 }
 
+static void gen_void()
+{
+  int num = choose(2);
+  for(int i = 0; i < num; i++)
+  {
+    buf[buf_ptr] = ' ';
+    buf_ptr++;
+  }
+}
+
 static void gen_rand_expr(int flag) {
-  int mod = choose(3);
+  int mod = choose(2);
   while (flag == 4 && mod == 1)
   {
     mod = choose(3);
@@ -116,8 +126,8 @@ static void gen_rand_expr(int flag) {
   }
   switch (mod) {
     case 0: gen_num(0); break;
-    case 1: gen('('); exp_num++; gen_rand_expr(4); gen(')'); break;
-    default: exp_num++; gen_rand_expr(0); gen_rand_op(); exp_num++; gen_rand_expr(0); break;
+    case 1: gen('('); exp_num++; gen_void(); gen_rand_expr(4); gen_void(); gen(')'); break;
+    default: exp_num++; gen_void(); gen_rand_expr(0); gen_rand_op(); exp_num++; gen_void(); gen_rand_expr(0); break;
   }
 }
 
