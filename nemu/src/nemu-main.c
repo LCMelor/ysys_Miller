@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
   int i = 1;
   while((fgets(exp_line, 640, input)) != NULL)
   {
-    exp_right_res= strtol(strtok(exp_line, " "), NULL, 10);
+    exp_right_res= strtol(strtok(exp_line, " "), NULL, 0);
     // fgets() read the '\n' at the end of line
     exp = strtok(NULL, "\n");
     exp_calcu_res = expr(exp, &success);

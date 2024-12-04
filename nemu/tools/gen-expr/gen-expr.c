@@ -87,7 +87,7 @@ static void gen(char c)
 
 static void gen_rand_op()
 {
-  int op = choose(4);
+  int op = choose(5);
   if(op == 0) {
     buf[buf_ptr] = '+';
   }
@@ -99,6 +99,11 @@ static void gen_rand_op()
   }
   else if(op == 3) {
     buf[buf_ptr] = '/';
+  }
+  else if(op == 4) {
+    buf[buf_ptr] = '!';
+    buf_ptr++;
+    buf[buf_ptr] = '=';
   }
   buf_ptr ++;
   assert(buf_ptr < MAX_BUF);
@@ -132,7 +137,7 @@ static void gen_rand_expr(int flag) {
 }
 
 int main(int argc, char *argv[]) {
-  int seed = time(0);
+  int seed = time(NULL);
   srand(seed);
   int loop = 1;
   if (argc > 1) {

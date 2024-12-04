@@ -14,6 +14,7 @@
 ***************************************************************************************/
 
 #include <isa.h>
+#include <memory/vaddr.h>
 
 /* We use the POSIX regex functions to process regular expressions.
  * Type 'man regex' for more information about POSIX regex functions.
@@ -21,11 +22,37 @@
 #include <regex.h>
 
 enum {
-  TK_NOTYPE = 256, TK_EQ, TK_NUM,
+  TK_NOTYPE = 256, TK_EQ, TK_INEQ, TK_AND, TK_DENUM, TK_HXNUM, TK_REG, DEREF
 
   /* TODO: Add more token types */
 
 };
+
+static int op_priority_table[300];
+
+static void init_op_prio_table()
+{
+  /* give each operator a priority */
+  /* priority
+    *(dereference) 5
+    * /            4
+    + -            3
+    == !=          2
+    &&             1
+  */
+  int i;
+  for(i = 0; i < 300;i ++) {
+    op_priority_table[i] = 0;
+  }
+  op_priority_table[DEREF] = 5;
+  op_priority_table['*'] = 4;
+  op_priority_table['/'] = 4;
+  op_priority_table['+'] = 3;
+  op_priority_table['-'] = 3;
+  op_priority_table[TK_EQ] = 2;
+  op_priority_table[TK_INEQ] = 2;
+  op_priority_table[TK_AND] = 1;
+}
 
 static struct rule {
   const char *regex;
@@ -41,10 +68,15 @@ static struct rule {
   {"-", '-'},           // subtraction
   {"\\*", '*'},         // multiplication
   {"/", '/'},           // division
-  {"\\(", '('},           // left bracket
-  {"\\)", ')'},           // right bracket
-  {"[0-9]+", TK_NUM},   // number
+  {"\\(", '('},         // left bracket
+  {"\\)", ')'},         // right bracket
+  {"0x[0-9,A-F]+", TK_HXNUM}, // hexadecimal-number
+  {"[0-9]+", TK_DENUM}, // decimal-number
   {"==", TK_EQ},        // equal
+  {"\\!=", TK_INEQ},    // ineuqal
+  {"&&", TK_AND},       // and
+  {"\\$(\\$0|[a-z,0-9]+)"}, // reg
+  {"\\*", DEREF},         // dereference
 };
 
 #define NR_REGEX ARRLEN(rules)
@@ -102,7 +134,7 @@ static bool make_token(char *e) {
          */
 
         position += substr_len;
-        
+
         // skip the notype
         if (rules[i].token_type == TK_NOTYPE)
         {
@@ -139,8 +171,24 @@ word_t expr(char *e, bool *success) {
     return 0;
   }
 
+    int i;
+    for (i = 0; i < nr_token; i ++) {
+    if (tokens[i].type == '*' && (i == 0 || 
+      tokens[i - 1].type == TK_AND 
+    || tokens[i - 1].type == TK_EQ 
+    || tokens[i - 1].type == TK_INEQ 
+    || tokens[i - 1].type == '+' 
+    || tokens[i - 1].type == '-' 
+    || tokens[i - 1].type == '*' 
+    || tokens[i - 1].type == '/' 
+    || tokens[i - 1].type == '(') ) {
+      tokens[i].type = DEREF;
+    }
+  }
+
   /* TODO: Insert codes to evaluate the expression. */
   *success = true;
+  init_op_prio_table();
   return eval(0, nr_token - 1);
 }
 
@@ -183,7 +231,7 @@ static bool check_parentheses(int l, int r)
 static int find_main_op(int l, int r)
 {
   int l_parenthese = 0;
-  int main_op = l + 1;
+  int main_op = l;
   // the far left and right side must not be operator
   for(int i = l; i < r; i ++) {
 
@@ -195,13 +243,12 @@ static int find_main_op(int l, int r)
     }
     
     // out of parenthese and detect operator
-    if(l_parenthese == 0 && 
-    (tokens[i].type == '+' || tokens[i].type == '-' || tokens[i].type == '*' || tokens[i].type == '/')) {
-      if( (tokens[main_op].type == '+' || tokens[main_op].type == '-') &&
-          (tokens[i].type == '*' || tokens[i].type == '/') ) 
-          {
-            continue;
-          }
+    if(l_parenthese == 0 && op_priority_table[tokens[i].type] != 0) {
+      /* detect a lower priority operator or first find operator */
+      if((op_priority_table[tokens[i].type] > op_priority_table[tokens[main_op].type]) &&
+          op_priority_table[tokens[main_op].type] != 0) {
+        continue;
+      }
       main_op = i;
     }
   }
@@ -216,24 +263,44 @@ static int eval(int l, int r)
     assert(0);
   }
   else if (l == r) {
-    return strtol(tokens[l].str, NULL, 10);
+    if(tokens[l].type == TK_REG) {
+      bool success;
+      word_t reg_content = isa_reg_str2val(tokens[l].str, &success);
+      if(!success) {
+        assert(0);
+      }
+      return reg_content;
+    }
+    /* convert the str by prefix into integer */
+    return strtol(tokens[l].str, NULL, 0);
   }
   else if(check_parentheses(l, r) == true) {
     return eval(l + 1, r - 1);
   }
   else {
     int op = find_main_op(l, r);
-    
-    int val1 = eval(l, op - 1);
-    int val2 = eval(op + 1, r);
 
-    // var op represent index of main operator in tokens array
-    switch(tokens[op].type){
-      case '+': return val1 + val2; break;
-      case '-': return val1 - val2; break;
-      case '*': return val1 * val2; break;
-      case '/': return val1 / val2; break;
-      default: assert(0);
+    /* *(dereference) is the highest operator. When only it exist, we should use it to get value */
+    if(tokens[op].type == DEREF) {
+      vaddr_t dere_addr = strtol(tokens[op + 1].str, NULL, 0);
+      word_t mem_content = vaddr_read(dere_addr, 4);
+      return mem_content;
+    }
+    else {
+      int val1 = eval(l, op - 1);
+      int val2 = eval(op + 1, r);
+
+      // var op represent index of main operator in tokens array
+      switch(tokens[op].type){
+        case '+': return val1 + val2; break;
+        case '-': return val1 - val2; break;
+        case '*': return val1 * val2; break;
+        case '/': return val1 / val2; break;
+        case TK_EQ: return val1 == val2; break;
+        case TK_INEQ: return val1 != val2; break;
+        case TK_AND: return val1 && val2; break;
+        default: assert(0);
+      }
     }
   }
 }

@@ -153,7 +153,7 @@ static int cmd_x(char *args)
     content = vaddr_read(addr, 4);
     printf("%08x  ", content);
   }
-  if(i % 4 != 1) {
+  if(i % 4 != 1 || i == 1) {
     printf("\n");
   }
   return 0;
