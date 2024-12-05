@@ -75,7 +75,7 @@ static struct rule {
   {"==", TK_EQ},        // equal
   {"\\!=", TK_INEQ},    // ineuqal
   {"&&", TK_AND},       // and
-  {"\\$(\\$0|[a-z,0-9]+)"}, // reg
+  {"\\$(\\$0|[a-z,0-9]+)", TK_REG}, // reg
   {"\\*", DEREF},         // dereference
 };
 
@@ -265,7 +265,7 @@ static int eval(int l, int r)
   else if (l == r) {
     if(tokens[l].type == TK_REG) {
       bool success;
-      word_t reg_content = isa_reg_str2val(tokens[l].str, &success);
+      word_t reg_content = isa_reg_str2val(tokens[l].str + 1, &success);
       if(!success) {
         assert(0);
       }

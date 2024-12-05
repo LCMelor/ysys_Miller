@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
 #endif
 
 /* -----------------expression test start ---------------------*/
-  bool success;
+/* bool success;
   word_t exp_calcu_res;
   char exp_line[640];
   char *exp;
@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
   }
 
   fclose(input);
-
+*/
 /* -----------------expression test end ---------------------*/
   /* Start engine. */
   engine_start();

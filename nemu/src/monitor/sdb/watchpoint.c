@@ -13,17 +13,9 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
-#include "sdb.h"
+#include "monitor/sdb.h"
 
 #define NR_WP 32
-
-typedef struct watchpoint {
-  int NO;
-  struct watchpoint *next;
-
-  /* TODO: Add more members if necessary */
-
-} WP;
 
 static WP wp_pool[NR_WP] = {};
 static WP *head = NULL, *free_ = NULL;
@@ -39,5 +31,81 @@ void init_wp_pool() {
   free_ = wp_pool;
 }
 
-/* TODO: Implement the functionality of watchpoint */
+
+WP *new_wp()
+{
+  /* get a new WP from head of free_ and add it to the head of head*/
+  if(free_ == NULL) {
+    Log("Watch points are exhausted");
+    assert(0);
+  }
+  else if(head == NULL) {
+      head = free_;
+      free_ = free_->next;
+      head->next = NULL;
+  }
+  else {
+    WP *tmp = free_;
+    free_ = free_->next;
+    tmp->next = head;
+    head = tmp;
+  }
+  return head;
+}
+
+/* free a WP and add it to the head of free_ */
+void free_wp(int id)
+{
+  /* if head is empty */
+  if(head == NULL) {
+    Log("There have no Watch point is uesd");
+    return;
+  }
+  else {
+    WP *ptr = head;
+    WP *pre_ptr = NULL;
+    while(ptr->NO != id && ptr != NULL) {
+      pre_ptr = ptr;
+      ptr = ptr->next;
+    }
+    if(ptr == NULL) {
+      Log("No watch point with id %d found", id);
+      return;
+    }
+    else {
+      /* delete head */
+      if(ptr == head) {
+        WP *tmp = head;
+        head = head->next;
+        tmp->next = free_;
+        free_ = tmp;
+      }
+      else {
+        pre_ptr->next = ptr->next;
+        ptr->next = free_;
+        free_ = ptr;
+      }
+    }
+  }
+}
+
+WP *get_head()
+{
+  return head;
+}
+/* print the under using watch points */
+void print_WP()
+{
+  WP *wp_ptr = head;
+  if(head == NULL) {
+    printf("There is no used watch point\n");
+  }
+  else {
+    printf("%-8s%s\n", "Num", "What");
+    while(wp_ptr != NULL) {
+      printf("%-8d%s\n", wp_ptr->NO, wp_ptr->exp);
+      wp_ptr = wp_ptr->next;
+    }
+  }
+}
 

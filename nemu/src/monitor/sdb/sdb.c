@@ -17,7 +17,7 @@
 #include <cpu/cpu.h>
 #include <readline/readline.h>
 #include <readline/history.h>
-#include "sdb.h"
+#include "monitor/sdb.h"
 #include <utils.h>
 #include <memory/vaddr.h>
 
@@ -59,6 +59,9 @@ static int cmd_help(char *args);
 static int cmd_s(char *args);
 static int cmd_info(char *args);
 static int cmd_x(char *args);
+static int cmd_w(char *args);
+static int cmd_d(char *args);
+static int cmd_p(char *args);
 
 static struct {
   const char *name;
@@ -71,6 +74,9 @@ static struct {
   { "s", "Step the program", cmd_s},
   { "info", "Print program status infomation", cmd_info},
   { "x", "scan the memory", cmd_x},
+  { "w", "set watch point", cmd_w},
+  { "d", "delete watch point", cmd_d},
+  { "p", "evaluate expression", cmd_p}
 
   /* TODO: Add more commands */
 
@@ -121,6 +127,9 @@ static int cmd_info(char *args)
   if(strcmp(arg, "r") == 0) {
     isa_reg_display();
   }
+  if(strcmp(arg, "w") == 0) {
+    print_WP();
+  }
   return 0;
 }
 
@@ -156,6 +165,47 @@ static int cmd_x(char *args)
   if(i % 4 != 1 || i == 1) {
     printf("\n");
   }
+  return 0;
+}
+
+static int cmd_w(char *args)
+{
+  char *exp = strtok(NULL, "\n");
+  int exp_len = strlen(exp);
+
+  WP *wp_ptr = new_wp();
+  strncpy(wp_ptr->exp, exp, exp_len);
+  wp_ptr->exp[exp_len] = '\0';
+
+  bool success;
+  wp_ptr->value = expr(wp_ptr->exp, &success);
+  if(success == false) {
+    assert(0);
+  }
+
+  return 0;
+}
+
+static int cmd_d(char *args)
+{
+  char *id_exp = strtok(NULL, " ");
+  int id = strtol(id_exp, NULL, 10);
+
+  free_wp(id);
+
+  return 0;
+}
+
+static int cmd_p(char *args)
+{
+  char *exp = strtok(NULL, "\n");
+  bool success;
+  unsigned value = expr(exp, &success);
+    if(!success) {
+      assert(0);
+    }
+  printf("value is:%u\n", value);
+
   return 0;
 }
 
