@@ -27,6 +27,7 @@
 
 // this should be enough
 static char buf[65536] = {};
+static char deu_buf[65536] = {};
 static char code_buf[65536 + 128] = {}; // a little larger than `buf`
 static char *code_format =
 "#include <stdio.h>\n"
@@ -69,6 +70,9 @@ static void gen_num()
     buf[buf_ptr] = '0';
     buf_ptr++;
   }
+
+  buf[buf_ptr] = 'u';
+  buf_ptr ++;
 }
 
 static void gen(char c)
@@ -87,31 +91,34 @@ static void gen(char c)
 
 static void gen_rand_op()
 {
-  int op = choose(5);
+  int op = choose(4);
   if(op == 0) {
     buf[buf_ptr] = '+';
+    buf_ptr ++;
   }
   else if(op == 1) {
     buf[buf_ptr] = '-';
+    buf_ptr ++;
   }
   else if(op == 2) {
     buf[buf_ptr] = '*';
+    buf_ptr ++;
   }
   else if(op == 3) {
     buf[buf_ptr] = '/';
+    buf_ptr ++;
   }
-  else if(op == 4) {
-    buf[buf_ptr] = '!';
-    buf_ptr++;
-    buf[buf_ptr] = '=';
-  }
-  buf_ptr ++;
+  // else if(op == 4) {
+  //   buf[buf_ptr] = '!';
+  //   buf_ptr++;
+  //   buf[buf_ptr] = '=';
+  // }
   assert(buf_ptr < MAX_BUF);
 }
 
 static void gen_void()
 {
-  int num = choose(2);
+  int num = choose(1);
   for(int i = 0; i < num; i++)
   {
     buf[buf_ptr] = ' ';
@@ -120,7 +127,7 @@ static void gen_void()
 }
 
 static void gen_rand_expr(int flag) {
-  int mod = choose(2);
+  int mod = choose(3);
   while (flag == 4 && mod == 1)
   {
     mod = choose(3);
@@ -130,14 +137,14 @@ static void gen_rand_expr(int flag) {
     mod = 0;
   }
   switch (mod) {
-    case 0: gen_num(0); break;
+    case 0: gen_num(); break;
     case 1: gen('('); exp_num++; gen_void(); gen_rand_expr(4); gen_void(); gen(')'); break;
     default: exp_num++; gen_void(); gen_rand_expr(0); gen_rand_op(); exp_num++; gen_void(); gen_rand_expr(0); break;
   }
 }
 
 int main(int argc, char *argv[]) {
-  int seed = time(NULL);
+  int seed = time(0);
   srand(seed);
   int loop = 1;
   if (argc > 1) {
@@ -170,7 +177,18 @@ int main(int argc, char *argv[]) {
     ret = fscanf(fp, "%d", &result);
     pclose(fp);
 
-    printf("%u %s\n", result, buf);
+    int j = 0;
+    for(j = 0; j < buf_ptr; j ++) {
+      if(buf[j] == 'u') {
+        deu_buf[j] = ' ';
+      }
+      else {
+        deu_buf[j] = buf[j];
+      }
+    }
+    deu_buf[j] = '\0';
+    
+    printf("%u %s\n", result, deu_buf);
   }
   return 0;
 }

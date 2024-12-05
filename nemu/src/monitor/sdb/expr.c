@@ -292,10 +292,10 @@ static int eval(int l, int r)
 
       // var op represent index of main operator in tokens array
       switch(tokens[op].type){
-        case '+': return val1 + val2; break;
-        case '-': return val1 - val2; break;
-        case '*': return val1 * val2; break;
-        case '/': return val1 / val2; break;
+        case '+': return (unsigned)val1 + val2; break;
+        case '-': return (unsigned)val1 - val2; break;
+        case '*': return (unsigned)val1 * val2; break;
+        case '/': return (unsigned)val1 / val2; break;
         case TK_EQ: return val1 == val2; break;
         case TK_INEQ: return val1 != val2; break;
         case TK_AND: return val1 && val2; break;
