@@ -3,7 +3,8 @@ NXDC_FILES = constr/top.nxdc
 INC_PATH ?=
 
 VERILATOR_FLAGS += -MMD --build -cc \
-								 -O3 --x-assign fast --x-initial fast --noassert	
+								 -O3 --x-assign fast --x-initial fast --noassert \
+							 -j	 
 
 VERILATOR = verilator
 

@@ -139,9 +139,14 @@ static int cmd_x(char *args)
   char *arg_count = strtok(NULL, " ");
   char *arg_exp = strtok(NULL, " ");
 
+  bool success;
+  vaddr_t addr = expr(arg_exp, &success);
+    if(!success) {
+      assert(0);
+    }
+
   /* convert the string into numerical value */
   int count = strtol(arg_count, NULL, 10);
-  vaddr_t addr = strtol(arg_exp, NULL, 0);
 
   /* if(addr % 4 != 0) {
     printf("The target address is not legal\n");
