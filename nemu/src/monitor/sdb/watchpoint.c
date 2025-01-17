@@ -109,3 +109,24 @@ void print_WP()
   }
 }
 
+void WP_update()
+{
+  WP *wp_ptr = get_head();
+  while(wp_ptr != NULL) {
+    bool success;
+    unsigned new_value = expr(wp_ptr->exp, &success);
+    if(!success) {
+      assert(0);
+    }
+    if(new_value != wp_ptr->value) {
+      unsigned old_value = wp_ptr->value;
+      wp_ptr->value = new_value;
+      nemu_state.state = NEMU_STOP;
+      printf("Trigger watch %s\nnew value:%d\nold value: %d\n",wp_ptr->exp, new_value, old_value);
+      break;
+    }
+
+    wp_ptr = wp_ptr->next;
+  }
+}
+
