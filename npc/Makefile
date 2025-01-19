@@ -1,10 +1,10 @@
-TOPNAME = top
+TOPNAME = core
 NXDC_FILES = constr/top.nxdc
 INC_PATH ?=
 
 VERILATOR_FLAGS += -MMD --build -cc \
 								 -O3 --x-assign fast --x-initial fast --noassert \
-							 -j	 
+							 -j	 --trace-fst --trace-structs
 
 VERILATOR = verilator
 
@@ -25,7 +25,7 @@ $(SRC_AUTO_BIND): $(NXDC_FILES)
 # source file
 VERILATOR_VSRC = $(shell find $(abspath ./vsrc) -name "*.v")
 VERILATOR_CSRC = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
-VERILATOR_CSRC += $(SRC_AUTO_BIND)
+#VERILATOR_CSRC += $(SRC_AUTO_BIND)
 
 
 build:
@@ -39,6 +39,16 @@ include ../Makefile
 # rules for verilator
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
+
+# NPC with no NVBOARD
+npc: $(VERILATOR_VSRC) $(VERILATOR_CSRC)
+	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
+	@rm -rf $(OBJ_DIR)
+	$(VERILATOR) $(VERILATOR_FLAGS) \
+		--top-module $(TOPNAME) $^ \
+	 --Mdir $(OBJ_DIR) --exe -o $(abspath $(NVBOARD_TARGET))
+	 @$(NVBOARD_TARGET)
+
 
 # simulation
 $(NVBOARD_TARGET): $(VERILATOR_VSRC) $(VERILATOR_CSRC) $(NVBOARD_ARCHIVE)
