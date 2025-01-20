@@ -5,7 +5,17 @@
 #include <assert.h>
 #include "verilated_fst_c.h"
 
+
 uint32_t mem[1024];
+bool stop_flag = false;
+
+extern "C" void stop_sim(bool stop)
+{
+  if (stop)
+  {
+    stop_flag = true;
+  }
+}
 
 void mem_init()
 {
@@ -14,8 +24,9 @@ void mem_init()
   mem[2] = 0x00300093; // addi x1, x0, 3
   mem[3] = 0x00400093; // addi x1, x0, 4
   mem[4] = 0x00208113; // addi x2, x1, 2
+  mem[5] = 0x00100073; // ebreak
 
-  for (int i = 5; i < 1024; i++)
+  for (int i = 6; i < 1024; i++)
   {
     mem[i] = 0x00000013; // nop
   }
@@ -80,9 +91,10 @@ int main(int argc, char **argv)
   while (1)
   {
     single_cycle(top, tfp, context_p);
-
-    if (top->inst == 0x00000013)
+    if(stop_flag)
+    {
       break;
+    }
   }
 
   printf("Simulation done\n");

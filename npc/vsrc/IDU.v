@@ -7,16 +7,20 @@ module IDU (
         output alu_opcode,
         output [31:0] alu_src1,
         output [31:0] alu_src2,
-        input [31:0] alu_res
+        input [31:0] alu_res,
+        // to stop sim
+        output stop
     );
     // decode
     wire [6:0] opcode;
     wire [2:0] fun;
     wire [4:0] rs1;
     wire [4:0] rd;
+    wire [11:0] imm;
     wire [31:0] I_imm;
 
     wire inst_I;
+    wire inst_ebreak;
     // wire [31:0] alu_src1;
     // wire [31:0] alu_src2;
     // wire [31:0] alu_res;
@@ -33,9 +37,11 @@ module IDU (
     assign fun = inst[14:12];
     assign rs1 = inst[19:15];
     assign rd = inst[11:7];
+    assign imm = inst[31:20];
     assign I_imm = {{20{inst[31]}},inst[31:20]};
 
     assign inst_I = opcode == 7'b0010011 && fun == 3'b000;
+    assign inst_ebreak = opcode == 7'b1110011 && fun == 3'b000 && rd == 5'b00000 && rs1 == 5'b00000 && imm == 12'b000000000001;
 
     assign alu_src1 = inst_I ? rf_rdata : 32'h0;
     assign alu_src2 = inst_I ? I_imm : 32'h0;
@@ -56,5 +62,5 @@ module IDU (
                 .rdata (rf_rdata )
             );
 
-
+    assign stop = inst_ebreak;
 endmodule

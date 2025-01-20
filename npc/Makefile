@@ -24,6 +24,7 @@ $(SRC_AUTO_BIND): $(NXDC_FILES)
 
 # source file
 VERILATOR_VSRC = $(shell find $(abspath ./vsrc) -name "*.v")
+VERILATOR_VSRC += $(shell find $(abspath ./vsrc) -name "*.sv")
 VERILATOR_CSRC = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 #VERILATOR_CSRC += $(SRC_AUTO_BIND)
 
