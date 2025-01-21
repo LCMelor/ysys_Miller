@@ -1,4 +1,4 @@
-STUID = ysyx_22040000
+STUID = ysyx_24120012
 STUNAME = Miller 
 
 # DO NOT modify the following code!!!
