@@ -15,6 +15,7 @@
 
 #include <isa.h>
 #include <memory/paddr.h>
+#include <cpu/trace.h>
 
 void init_rand();
 void init_log(const char *log_file);
@@ -23,7 +24,7 @@ void init_difftest(char *ref_so_file, long img_size, int port);
 void init_device();
 void init_sdb();
 void init_disasm();
-
+void init_ringbuf(iringbuf *ringbuf);
 
 #ifndef CONFIG_TARGET_AM
 #include <getopt.h>
@@ -34,6 +35,8 @@ static char *log_file = NULL;
 static char *diff_so_file = NULL;
 static char *img_file = NULL;
 static int difftest_port = 1234;
+
+iringbuf g_iringbuf;
 
 static long load_img() {
   if (img_file == NULL) {
@@ -99,6 +102,9 @@ void init_monitor(int argc, char *argv[]) {
   /* Open the log file. */
   init_log(log_file);
 
+  /* Open the Mtrace log file */
+  IFDEF(CONFIG_MTRACE, init_mtrace());
+
   /* Initialize memory. */
   init_mem();
 
@@ -118,6 +124,7 @@ void init_monitor(int argc, char *argv[]) {
   init_sdb();
 
   IFDEF(CONFIG_ITRACE, init_disasm());
+  IFDEF(CONFIG_ITRACE, init_iringbuf(&g_iringbuf));
 
 }
 #else // CONFIG_TARGET_AM

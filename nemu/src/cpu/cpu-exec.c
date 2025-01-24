@@ -14,6 +14,7 @@
 ***************************************************************************************/
 
 #include <cpu/cpu.h>
+#include <cpu/trace.h>
 #include <cpu/decode.h>
 #include <cpu/difftest.h>
 #include <locale.h>
@@ -30,6 +31,7 @@ CPU_state cpu = {};
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
+extern iringbuf g_iringbuf;
 
 void device_update();
 
@@ -69,6 +71,13 @@ static void exec_once(Decode *s, vaddr_t pc) {
   void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
   disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
       MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst.val, ilen);
+
+  // Iringbuf is used to store the last MAX_INST_TO_PRINT instructions
+  memcpy(g_iringbuf.buf[g_iringbuf.tail], s->logbuf, sizeof(s->logbuf));
+  g_iringbuf.tail = (g_iringbuf.tail + 1) % MAX_INST_TO_PRINT;
+  if (g_iringbuf.tail == g_iringbuf.head) {
+    g_iringbuf.head = (g_iringbuf.head + 1) % MAX_INST_TO_PRINT;
+  }
 #endif
 }
 
