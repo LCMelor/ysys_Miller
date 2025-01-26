@@ -24,7 +24,6 @@ void init_difftest(char *ref_so_file, long img_size, int port);
 void init_device();
 void init_sdb();
 void init_disasm();
-void init_ringbuf(iringbuf *ringbuf);
 
 #ifndef CONFIG_TARGET_AM
 #include <getopt.h>
@@ -67,15 +66,17 @@ static int parse_args(int argc, char *argv[]) {
     {"diff"     , required_argument, NULL, 'd'},
     {"port"     , required_argument, NULL, 'p'},
     {"help"     , no_argument      , NULL, 'h'},
+    {"pelf"     , required_argument, NULL, 'e'},
     {0          , 0                , NULL,  0 },
   };
   int o;
-  while ( (o = getopt_long(argc, argv, "-bhl:d:p:", table, NULL)) != -1) {
+  while ( (o = getopt_long(argc, argv, "-bhl:d:p:e:", table, NULL)) != -1) {
     switch (o) {
       case 'b': sdb_set_batch_mode(); break;
       case 'p': sscanf(optarg, "%d", &difftest_port); break;
       case 'l': log_file = optarg; break;
       case 'd': diff_so_file = optarg; break;
+      case 'e': parse_elf(optarg); break;
       case 1: img_file = optarg; return 0;
       default:
         printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
@@ -104,6 +105,9 @@ void init_monitor(int argc, char *argv[]) {
 
   /* Open the Mtrace log file */
   IFDEF(CONFIG_MTRACE, init_mtrace());
+
+  /* Open the Ftrace log file */
+  IFDEF(CONFIG_FTRACE, init_ftrace());
 
   /* Initialize memory. */
   init_mem();
