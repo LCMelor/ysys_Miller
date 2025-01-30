@@ -143,6 +143,7 @@ void parse_elf(const char *elf_file)
     }
 
     free(strtab);
+    fclose(fp);
 }
 
 void init_ftrace()
