@@ -1,45 +1,60 @@
+# Basic Setup and Check
+
+ifeq ($(MAKECMDGOALS),)
+  MAKECMDGOALS  = npc
+endif
+
+# 1.General Compilation Target Settings
+
 TOPNAME = core
+
+# Create a build directory
+WORK_DIR = $(shell pwd)
+DST_DIR  = $(WORK_DIR)/build/$(TOPNAME)
+$(shell mkdir -p $(DST_DIR))
+
+# Compilation targets
+OBJ_DIR = $(DST_DIR)/obj_dir
+NVBOARD_TARGET = $(DST_DIR)/$(TOPNAME)
+
+# Source files
 NXDC_FILES = constr/top.nxdc
-INC_PATH ?=
 
-VERILATOR_FLAGS += -MMD --build -cc \
-								 -O3 --x-assign fast --x-initial fast --noassert \
-							 -j	 --trace-fst --trace-structs
-
-VERILATOR = verilator
-
-BUILD_DIR = ./build
-OBJ_DIR = $(BUILD_DIR)/obj_dir 
-NVBOARD_TARGET = $(BUILD_DIR)/$(TOPNAME) 
-
-
-# ---------------------------------------------------------- 
-#  default
-default: build $(NVBOARD_TARGET)
-
-# constrain file
-SRC_AUTO_BIND = $(abspath $(BUILD_DIR)/auto_bind.cpp)
+SRC_AUTO_BIND = $(abspath $(DST_DIR)/auto_bind.cpp)
 $(SRC_AUTO_BIND): $(NXDC_FILES)
 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
 
-# source file
 VERILATOR_VSRC = $(shell find $(abspath ./vsrc) -name "*.v")
 VERILATOR_VSRC += $(shell find $(abspath ./vsrc) -name "*.sv")
 VERILATOR_CSRC = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 #VERILATOR_CSRC += $(SRC_AUTO_BIND)
 
+IMG ?=
 
-build:
-	mkdir -p $(BUILD_DIR)
+# 2.Compliation Flags
+
+VERILATOR = verilator
+
+INC_PATH ?=
+INC_PATH += $(abspath csrc/include)
+
+VERILATOR_FLAGS += -MMD --build -cc \
+								 -O3 --x-assign fast --x-initial fast --noassert \
+							 -j	 --trace
+
+# rules for verilator
+INCFLAGS = $(addprefix -I, $(INC_PATH))
+CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
+
+
+# 3. Include the rules for NVBoard and git
 
 # rules for NVBoard
 include $(NVBOARD_HOME)/scripts/nvboard.mk
 # rules for git
 include ../Makefile
 
-# rules for verilator
-INCFLAGS = $(addprefix -I, $(INC_PATH))
-CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
+# 4. Simulation
 
 # NPC with no NVBOARD
 npc: $(VERILATOR_VSRC) $(VERILATOR_CSRC)
@@ -47,11 +62,12 @@ npc: $(VERILATOR_VSRC) $(VERILATOR_CSRC)
 	@rm -rf $(OBJ_DIR)
 	$(VERILATOR) $(VERILATOR_FLAGS) \
 		--top-module $(TOPNAME) $^ \
+		$(addprefix -CFLAGS , $(CXXFLAGS)) \
 	 --Mdir $(OBJ_DIR) --exe -o $(abspath $(NVBOARD_TARGET))
-	 @$(NVBOARD_TARGET)
+	$(NVBOARD_TARGET) $(IMG)
 
 
-# simulation
+# simulation with NVBOARD
 $(NVBOARD_TARGET): $(VERILATOR_VSRC) $(VERILATOR_CSRC) $(NVBOARD_ARCHIVE)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@rm -rf $(OBJ_DIR)
@@ -63,9 +79,9 @@ $(NVBOARD_TARGET): $(VERILATOR_VSRC) $(VERILATOR_CSRC) $(NVBOARD_ARCHIVE)
 run: $(NVBOARD_TARGET)
 	@$^
 
-.PHONY: clean	
+# 5. Miscellaneous
+
+.PHONY: clean
 
 clean:
-	rm -rf $(BUILD_DIR)
-
-
+	rm -rf $(WORK_DIR)/build

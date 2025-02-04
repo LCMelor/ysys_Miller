@@ -5,7 +5,8 @@ module regiser (
     input [4:0] waddr,
     input [31:0] wdata,
     input [4:0] raddr,
-    output [31:0] rdata
+    output [31:0] rdata,
+    output [31:0] ret_value
 );
     reg [31:0] rf [31:0];
 
@@ -23,5 +24,7 @@ module regiser (
     end
 
     assign rdata = raddr == 0 ? 0 : rf[raddr];
+
+    assign ret_value = rf[10];
     
 endmodule
