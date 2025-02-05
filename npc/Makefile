@@ -45,6 +45,7 @@ VERILATOR_FLAGS += -MMD --build -cc \
 # rules for verilator
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
+LDFLAGS += -lreadline
 
 
 # 3. Include the rules for NVBoard and git
@@ -62,7 +63,7 @@ npc: $(VERILATOR_VSRC) $(VERILATOR_CSRC)
 	@rm -rf $(OBJ_DIR)
 	$(VERILATOR) $(VERILATOR_FLAGS) \
 		--top-module $(TOPNAME) $^ \
-		$(addprefix -CFLAGS , $(CXXFLAGS)) \
+		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
 	 --Mdir $(OBJ_DIR) --exe -o $(abspath $(NVBOARD_TARGET))
 	$(NVBOARD_TARGET) $(IMG)
 

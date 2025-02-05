@@ -1,4 +1,4 @@
-module regiser (
+module register (
     input clk,
     input rst,
     input wen,
@@ -6,9 +6,13 @@ module regiser (
     input [31:0] wdata,
     input [4:0] raddr,
     output [31:0] rdata,
-    output [31:0] ret_value
+    output [31:0] ret_value,
+    // DPI-C
+    output [31:0] regs [31:0]
 );
     reg [31:0] rf [31:0];
+
+    assign regs = rf;
 
     always @(posedge clk) begin
         if(rst) begin

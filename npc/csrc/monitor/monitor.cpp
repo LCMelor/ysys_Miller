@@ -2,6 +2,9 @@
 #include <mem.h>
 #include <excute.h>
 
+extern VerilatedContext context_p;
+extern Vcore top;
+extern VerilatedVcdC *tfp;
 
 void log_image(const char *filename)
 {
@@ -24,15 +27,15 @@ void log_image(const char *filename)
   fclose(fp);
 }
 
-void init_trace(Vcore *top, VerilatedVcdC *tfp, VerilatedContext *context_p)
+void init_trace()
 {
-  context_p->traceEverOn(true);
-  top->trace(tfp, 99);
-  tfp->open("waveform.vcd");
+  context_p.traceEverOn(true);
+  top.trace(tfp, 99);
+  tfp->open("build/core/core_wave.vcd");
 }
 
 
-void init_monitor(int argc, char **argv, Vcore *top, VerilatedVcdC *tfp, VerilatedContext *context_p)
+void init_monitor(int argc, char **argv)
 {
     // Initialize memory
     init_mem();
@@ -44,8 +47,8 @@ void init_monitor(int argc, char **argv, Vcore *top, VerilatedVcdC *tfp, Verilat
     }
 
     // initialize the trace dump
-    init_trace(top, tfp, context_p);
+    init_trace();
 
     // reset the core
-    reset(top, tfp, context_p, 1);
+    reset(2);
 }

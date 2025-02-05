@@ -11,8 +11,11 @@ module core(
   wire [31:0] alu_src1;
   wire [31:0] alu_src2;
   wire [31:0] alu_res;
+
+  // DPI-C
   wire stop;
   wire [31:0] ret_value;
+  wire [31:0] regs [31:0];
 
   wire jump;
   wire [31:0] jump_addr;
@@ -21,6 +24,12 @@ module core(
   always @(*) begin
     stop_sim(stop, ret_value);
   end
+
+  export "DPI-C" function get_sv_reg;
+  function int get_sv_reg(int reg_id);
+        if (reg_id < 0 || reg_id >= 32) return -1;
+        return regs[reg_id];
+  endfunction
 
 
   IFU u_IFU(
@@ -44,7 +53,8 @@ module core(
       .alu_src2   (alu_src2   ),
       .alu_res    (alu_res    ),
       .stop       (stop       ),
-      .ret_value  (ret_value  )
+      .ret_value  (ret_value  ),
+      .regs       (regs       )
   );
   
   EXU u_EXU(

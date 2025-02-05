@@ -13,7 +13,9 @@ module IDU (
         input [31:0] alu_res,
         // to stop sim & judge status
         output stop,
-        output [31:0] ret_value
+        output [31:0] ret_value,
+        // DPI-C
+        output [31:0] regs [31:0]
     );
     // decode
     wire [6:0] opcode;
@@ -79,7 +81,7 @@ module IDU (
     assign rf_waddr = rd;
     assign rf_wen = inst_I_type || inst_auipc || inst_lui || inst_jalr || inst_J_type;
     assign rf_wdata = (inst_jalr | inst_J_type) ? seq_pc : alu_res;
-    regiser u_regiser(
+    register u_register(
                 .clk   (clk   ),
                 .rst   (rst   ),
                 .wen   (rf_wen   ),
@@ -87,7 +89,8 @@ module IDU (
                 .wdata (rf_wdata ),
                 .raddr (rf_raddr ),
                 .rdata (rf_rdata ),
-                .ret_value(ret_value)
+                .ret_value(ret_value),
+                .regs (regs)
             );
 
     assign stop = inst_ebreak;

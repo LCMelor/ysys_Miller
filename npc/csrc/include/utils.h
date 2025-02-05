@@ -24,5 +24,6 @@
       __FILE__, __LINE__, __func__, ## __VA_ARGS__)
 
 #define FMT_PADDR "0x%08x"
+#define FMT_WORD "0x%08x"
 
 #endif
