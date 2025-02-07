@@ -15,17 +15,14 @@ void init_mem()
   pmem = (uint8_t*)malloc(PMEM_SIZE);
   assert(pmem);
   Log("Memory initialized with [" FMT_PADDR ", " FMT_PADDR "]", PMEM_MBASE, PMEM_MBASE + PMEM_SIZE - 1);
-  // pmem[0] = 0x00100093; // addi x1, x0, 1
-  // pmem[1] = 0x00200093; // addi x1, x0, 2
-  // pmem[2] = 0x00300093; // addi x1, x0, 3
-  // pmem[3] = 0x00400093; // addi x1, x0, 4
-  // pmem[4] = 0x00208113; // addi x2, x1, 2
-  // pmem[5] = 0x00100073; // ebreak
 
-  // for (int i = 6; i < PMEM_SIZE; i++)
-  // {
-  //   pmem[i] = 0x00000013; // nop
-  // }
+  uint32_t *p = (uint32_t*)pmem;
+  p[0] = 0x00100093; // addi x1, x0, 1
+  p[1] = 0x00200093; // addi x1, x0, 2
+  p[2] = 0x00300093; // addi x1, x0, 3
+  p[3] = 0x00400093; // addi x1, x0, 4
+  p[4] = 0x00208113; // addi x2, x1, 2
+  p[5] = 0x00100073; // ebreak
 }
 uint32_t pmem_read(uint32_t paddr, int len)
 {

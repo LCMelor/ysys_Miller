@@ -31,6 +31,16 @@ module core(
         return regs[reg_id];
   endfunction
 
+  export "DPI-C" function jump_flag;
+  function bit jump_flag();
+        return jump;
+  endfunction
+
+  export "DPI-C" function jump_target;
+  function int jump_target();
+        return jump_addr;
+  endfunction
+
 
   IFU u_IFU(
       .clk      (clk      ),

@@ -23,7 +23,25 @@
     printf(ANSI_FMT("[%s:%d %s] " format, ANSI_FG_BLUE) "\n", \
       __FILE__, __LINE__, __func__, ## __VA_ARGS__)
 
+#define Assert(cond, format, ...) \
+  do \
+  { \
+    if (!(cond)) \
+    { \
+      Log(ANSI_FMT("Assertion failed: " format, ANSI_FG_RED), ## __VA_ARGS__); \
+      assert(cond); \
+    } \
+  } while (0);
+
 #define FMT_PADDR "0x%08x"
 #define FMT_WORD "0x%08x"
+
+#define log_write(format, ...) \
+  do \
+  { \
+    extern FILE *log_fp; \
+    fprintf(log_fp, format, __VA_ARGS__); \
+    fflush(log_fp); \
+  } while (0);
 
 #endif

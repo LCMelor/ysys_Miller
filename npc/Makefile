@@ -29,6 +29,9 @@ VERILATOR_VSRC += $(shell find $(abspath ./vsrc) -name "*.sv")
 VERILATOR_CSRC = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 #VERILATOR_CSRC += $(SRC_AUTO_BIND)
 
+# NPC arguments
+NPCARGS ?= -l "$(DST_DIR)/npc.log"
+
 IMG ?=
 
 # 2.Compliation Flags
@@ -65,7 +68,8 @@ npc: $(VERILATOR_VSRC) $(VERILATOR_CSRC)
 		--top-module $(TOPNAME) $^ \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
 	 --Mdir $(OBJ_DIR) --exe -o $(abspath $(NVBOARD_TARGET))
-	$(NVBOARD_TARGET) $(IMG)
+	@echo $(NVBOARD_TARGET) $(NPCARGS) $(IMG)
+	$(NVBOARD_TARGET) $(NPCARGS) $(IMG)
 
 
 # simulation with NVBOARD

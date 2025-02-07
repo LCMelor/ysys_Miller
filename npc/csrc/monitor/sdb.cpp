@@ -95,7 +95,7 @@ static char *rl_gets()
         line_read = NULL;
     }
 
-    line_read = readline("(sdb) ");
+    line_read = readline("(riscv32e-npc) ");
     if(line_read && *line_read)
     {
         add_history(line_read);

@@ -1,10 +1,14 @@
 #include <excute.h>
 #include <mem.h>
+#include <cpu.h>
+#include <trace.h>
 
 extern VerilatedContext context_p;
 extern Vcore top;
 extern VerilatedVcdC *tfp;
 extern bool stop_flag;
+
+cpu_state cpu;
 
 static void single_cycle()
 {
@@ -20,6 +24,9 @@ static void single_cycle()
   top.eval();
   tfp->dump(context_p.time());
   context_p.timeInc(1);
+
+  cpu.pc = pc;
+  cpu.inst = top.inst;
 }
 
 void excute(uint32_t n)
@@ -32,11 +39,21 @@ void excute(uint32_t n)
   while (n--)
   { 
     single_cycle();
+    itrace_write();
     if (stop_flag)
     {
       Log("Simulation stopped");
-      context_p.timeInc(1);
       return;
+    }
+
+    // ftrace
+    set_sv_scope();
+    uint32_t pc = cpu.pc;
+    uint32_t tar_pc = jump_target();
+    uint32_t jump = jump_flag();
+    if(jump)
+    {
+      ftrace_write(pc, tar_pc);
     }
   }
 }
