@@ -10,6 +10,8 @@ extern VerilatedVcdC *tfp;
 static const char *img_file = NULL;
 static char *log_file = NULL;
 
+void init_disasm();
+
 FILE *log_fp = NULL;
 
 static long log_image(const char *filename)
@@ -95,6 +97,9 @@ void init_monitor(int argc, char **argv)
 
     //initialize the ftrace
     init_ftrace();
+
+    // initialize the disasm
+    init_disasm();
 
     // reset the core
     reset(2);

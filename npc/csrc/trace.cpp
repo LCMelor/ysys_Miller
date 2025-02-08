@@ -4,10 +4,7 @@
 extern cpu_state cpu;
 
 /* ------------------ itrace -----------------*/
-void itrace_write()
-{
-    log_write("%08x: %08x\n", cpu.pc, cpu.inst);
-}
+
 
 /* ------------------ ftrace -----------------*/
 #define MAX_FUN_TRACE 32

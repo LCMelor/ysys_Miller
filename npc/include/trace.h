@@ -7,7 +7,6 @@
 #include <iostream>
 
 /* ------------------ itrace -----------------*/
-void itrace_write();
 
 /* ------------------ ftrace -----------------*/
 typedef struct 

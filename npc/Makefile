@@ -39,7 +39,8 @@ IMG ?=
 VERILATOR = verilator
 
 INC_PATH ?=
-INC_PATH += $(abspath csrc/include)
+INC_PATH += $(abspath include)
+INC_PATH += $(abspath tools/capstone/repo/include)
 
 VERILATOR_FLAGS += -MMD --build -cc \
 								 -O3 --x-assign fast --x-initial fast --noassert \
@@ -50,11 +51,19 @@ INCFLAGS = $(addprefix -I, $(INC_PATH))
 CXXFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
 LDFLAGS += -lreadline
 
+# link to llvm library
+LIBCAPSTONE = $(abspath tools/capstone/repo/libcapstone.so.5)
+CXXFLAGS += -DLIBCAPSTONE=\"$(LIBCAPSTONE)\"
+csrc/utils/disasm.cpp: $(LIBCAPSTONE)
+$(LIBCAPSTONE):
+	$(MAKE) -C tools/capstone
+
 
 # 3. Include the rules for NVBoard and git
 
 # rules for NVBoard
-include $(NVBOARD_HOME)/scripts/nvboard.mk
+# include $(NVBOARD_HOME)/scripts/nvboard.mk
+
 # rules for git
 include ../Makefile
 
@@ -68,7 +77,6 @@ npc: $(VERILATOR_VSRC) $(VERILATOR_CSRC)
 		--top-module $(TOPNAME) $^ \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
 	 --Mdir $(OBJ_DIR) --exe -o $(abspath $(NVBOARD_TARGET))
-	@echo $(NVBOARD_TARGET) $(NPCARGS) $(IMG)
 	$(NVBOARD_TARGET) $(NPCARGS) $(IMG)
 
 
