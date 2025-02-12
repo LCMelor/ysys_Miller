@@ -1,5 +1,4 @@
 #include <common.h>
-#include <excute.h>
 
 
 bool stop_flag = false;
@@ -11,13 +10,14 @@ VerilatedVcdC *tfp = NULL;
 
 void init_monitor(int argc, char **argv);
 void sdb_mainloop();
+int is_exit_status_bad();
 
 extern "C" void stop_sim(bool stop, uint32_t ret_value)
 {
   if (stop)
   {
     stop_flag = true;
-    ret = ret_value;
+    npc_state.halt_ret = ret_value;
   }
 }
 
@@ -32,9 +32,7 @@ int main(int argc, char **argv)
   // run simulation
   sdb_mainloop();
 
-  Log("NPC: %s\n", (ret == 0 ? ANSI_FMT("HIT GOOD TRAP!", ANSI_FG_GREEN) : 
-                    ANSI_FMT("HIT BAD TRAP!", ANSI_FG_RED)));
   tfp->close();
   delete tfp;
-  return 0;
+  return is_exit_status_bad();
 }

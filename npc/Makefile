@@ -31,6 +31,7 @@ VERILATOR_CSRC = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or
 
 # NPC arguments
 NPCARGS ?= -l "$(DST_DIR)/npc.log"
+override NPCARGS += -d $(NEMU_HOME)/build/riscv32-nemu-interpreter-so
 
 IMG ?=
 
@@ -77,6 +78,7 @@ npc: $(VERILATOR_VSRC) $(VERILATOR_CSRC)
 		--top-module $(TOPNAME) $^ \
 		$(addprefix -CFLAGS , $(CXXFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
 	 --Mdir $(OBJ_DIR) --exe -o $(abspath $(NVBOARD_TARGET))
+	@echo NPCARGS: $(NPCARGS)
 	$(NVBOARD_TARGET) $(NPCARGS) $(IMG)
 
 

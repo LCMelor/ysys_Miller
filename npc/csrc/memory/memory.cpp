@@ -5,7 +5,7 @@
 
 static uint8_t *pmem = NULL;
 
-uint8_t* gutest_to_host(uint32_t paddr)
+uint8_t* guest_to_host(uint32_t paddr)
 {
   return pmem + paddr - PMEM_MBASE;
 }

@@ -1,5 +1,5 @@
 #include <common.h>
-#include <excute.h>
+#include <execute.h>
 #include <mem.h>
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -40,6 +40,7 @@ static int cmd_help(char *args)
 
 static int cmd_exit(char *args)
 {
+    npc_state.state = NPC_QUIT;
     return -1;
 }
 
@@ -53,13 +54,13 @@ static int cmd_s(char *args)
         steps = atoi(arg);
     }
 
-    excute(steps);
+    execute(steps);
     return 0;
 }
 
 static int cmd_continue(char *args)
 {
-    excute(-1);
+    execute(-1);
     return 0;
 }
 

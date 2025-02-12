@@ -1,5 +1,5 @@
 #include <mem.h>
-#include <excute.h>
+#include <execute.h>
 #include <getopt.h>
 #include <trace.h>
 
@@ -9,8 +9,10 @@ extern VerilatedVcdC *tfp;
 
 static const char *img_file = NULL;
 static char *log_file = NULL;
+static char *diff_so_file = NULL;
 
 void init_disasm();
+void init_difftest(char *ref_so_file, long img_size, int port);
 
 FILE *log_fp = NULL;
 
@@ -18,7 +20,7 @@ static long log_image(const char *filename)
 {
   if(filename == NULL)
   {
-    printf("No image file, use the default img\n");
+    Log("No image file, use the default img");
     return 48;
   }
   FILE *fp = fopen(filename, "rb");
@@ -29,7 +31,7 @@ static long log_image(const char *filename)
   Log("Image %s is opened with size %ld", filename, size);
 
   fseek(fp, 0 , SEEK_SET);
-  int ret = fread(gutest_to_host(RESET_VECTOR), size, 1, fp);
+  int ret = fread(guest_to_host(RESET_VECTOR), size, 1, fp);
   assert(ret == 1);
 
   fclose(fp);
@@ -60,15 +62,17 @@ static int parse_args(int argc, char **argv)
   const struct option table[] = {
     {"log", required_argument, NULL, 'l'},
     {"pelf", required_argument, NULL, 'e'},
+    {"diff", required_argument, NULL, 'd'},
     {NULL, 0, NULL, 0}
   };
 
   int o;
-  while((o = getopt_long(argc, argv, "-l:e:", table, NULL)) != -1) {
+  while((o = getopt_long(argc, argv, "-l:e:d:", table, NULL)) != -1) {
     switch(o)
     {
       case 'l': log_file = optarg; break;
       case 'e': parse_elf(optarg); break;
+      case 'd': diff_so_file = optarg; break;
       case 1: img_file = optarg; break;
       default:
       printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
@@ -89,14 +93,18 @@ void init_monitor(int argc, char **argv)
     // log the image
     long img_size = log_image(img_file);
 
+    init_difftest(diff_so_file, img_size, 1234);
+
     // initialize the log file
     init_log(log_file);
 
-    // initialize the trace dump
+    // initialize the simulation trace dump
     init_trace();
 
+    #ifdef CONFIG_FTRACE
     //initialize the ftrace
     init_ftrace();
+    #endif
 
     // initialize the disasm
     init_disasm();

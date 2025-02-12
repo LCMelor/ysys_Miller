@@ -4,5 +4,5 @@
 #include <common.h>
 
 void init_mem();
-uint8_t* gutest_to_host(uint32_t paddr);
+uint8_t* guest_to_host(uint32_t paddr);
 uint32_t pmem_read(uint32_t vaddr, int len);

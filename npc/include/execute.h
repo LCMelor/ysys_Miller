@@ -3,7 +3,7 @@
 
 #include <common.h>
 
-void excute(uint32_t n);
+void execute(uint32_t n);
 void reset(int n);
 
 #endif
