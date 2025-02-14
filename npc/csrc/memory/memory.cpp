@@ -2,12 +2,17 @@
 #define MEMORY_H
 
 #include <mem.h>
+#include <trace.h>
 
 static uint8_t *pmem = NULL;
 
 uint8_t* guest_to_host(uint32_t paddr)
 {
   return pmem + paddr - PMEM_MBASE;
+}
+
+static inline bool in_mem(uint32_t addr) {
+  return addr - PMEM_MBASE < PMEM_SIZE;
 }
 
 void init_mem()
@@ -24,13 +29,63 @@ void init_mem()
   p[4] = 0x00208113; // addi x2, x1, 2
   p[5] = 0x00100073; // ebreak
 }
-uint32_t pmem_read(uint32_t paddr, int len)
+uint32_t pmem_read(uint32_t paddr)
 {
-  if(paddr % 4 != 0 && len != 4)
+  if(paddr % 4 != 0)
   {
     printf("Invalid memory access : %x\n", paddr);
     exit(1);
   }
+
+  #ifdef CONFIG_MTRACE
+  mtrace_read(paddr, 4, *(uint32_t*)(pmem + paddr - PMEM_MBASE));
+  #endif
+
   return *(uint32_t*)(pmem + paddr - PMEM_MBASE);
+}
+
+int pmem_read_sim(int raddr)
+{
+  int raddr_t = raddr & ~0x3u;
+  if(in_mem(raddr)) {
+    #ifdef CONFIG_MTRACE
+    mtrace_read(raddr_t, 4, *(uint32_t*)guest_to_host(raddr_t));
+    #endif
+    return *(uint32_t*)guest_to_host(raddr_t);
+  }
+  else {
+    printf("Invalid memory access in read_sim : %x\n", raddr);
+    return 0;
+  }
+}
+
+void pmem_write(int waddr, int wdata, char wmask)
+{
+  uint8_t *p_mem = guest_to_host(waddr);
+
+  if(in_mem(waddr)) {
+    #ifdef CONFIG_MTRACE
+    mtrace_write(waddr, 4, wdata);
+    #endif
+
+    switch(wmask) {
+      case 0x1: *(uint8_t*)p_mem = wdata; break;
+      case 0x3: *(uint16_t*)p_mem = wdata; break;
+      case 0xf: *(uint32_t*)p_mem = wdata; break;
+      default: 
+        printf("Wmask %x is not correct value, please check\n", wmask);
+        assert(0);
+    }
+
+    // printf("waddr " FMT_PADDR " write " FMT_WORD " and wmask is %x""\n", waddr, *(uint32_t*)p_wdata, wmask);
+    // printf("p_mem is " FMT_WORD " and p_wdata is " FMT_WORD "\n", *(uint16_t*)p_mem, *(uint16_t*)p_wdata);
+    // printf("j_space is %d\n", j_space);
+    // printf("p_mem is " FMT_PADDR " and p_mem + 2 is " FMT_PADDR "\n",guest_to_host(waddr_f), p_mem);
+    // printf("Write factly is " FMT_WORD "\n", *(uint32_t*)p_mem);
+
+  } else {
+    printf("Invalid memory access in pmem_write : %x\n", waddr);
+    return;
+  }
 }
 #endif

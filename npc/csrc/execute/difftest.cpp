@@ -18,7 +18,6 @@ void init_difftest(char *ref_so_file, long img_size, int port) {
   assert(ref_so_file != NULL);
 
   void *handle;
-  printf("ref_so_file: %s\n", ref_so_file);
   handle = dlopen(ref_so_file, RTLD_LAZY);
   assert(handle);
 
@@ -53,8 +52,9 @@ static bool difftest_checkregs(cpu_state *ref, uint32_t pc)
       return false;
     }
   }
-  if(cpu.pc != pc) {
+  if(ref->pc != pc) {
     printf("PC is not equal\n");
+    printf("ref pc is " FMT_WORD " npc pc is " FMT_WORD "\n", ref->pc, pc);
     return false;
   }
   

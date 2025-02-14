@@ -16,6 +16,10 @@ typedef struct
     char fun_name[128];
 }fun_info;
 
+void init_mtrace();
+void mtrace_write(uint32_t addr, int len, uint32_t data);
+void mtrace_read(uint32_t addr, int len, uint32_t data);
+
 void parse_elf(const char *elf_file);
 
 void init_ftrace();

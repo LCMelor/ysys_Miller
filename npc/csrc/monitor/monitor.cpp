@@ -14,6 +14,8 @@ static char *diff_so_file = NULL;
 void init_disasm();
 void init_difftest(char *ref_so_file, long img_size, int port);
 
+void set_batch();
+
 FILE *log_fp = NULL;
 
 static long log_image(const char *filename)
@@ -63,16 +65,18 @@ static int parse_args(int argc, char **argv)
     {"log", required_argument, NULL, 'l'},
     {"pelf", required_argument, NULL, 'e'},
     {"diff", required_argument, NULL, 'd'},
+    {"batch", no_argument, NULL, 'b'},
     {NULL, 0, NULL, 0}
   };
 
   int o;
-  while((o = getopt_long(argc, argv, "-l:e:d:", table, NULL)) != -1) {
+  while((o = getopt_long(argc, argv, "-l:e:d:b", table, NULL)) != -1) {
     switch(o)
     {
       case 'l': log_file = optarg; break;
       case 'e': parse_elf(optarg); break;
       case 'd': diff_so_file = optarg; break;
+      case 'b': set_batch(); break;
       case 1: img_file = optarg; break;
       default:
       printf("Usage: %s [OPTION...] IMAGE [args]\n\n", argv[0]);
@@ -100,6 +104,10 @@ void init_monitor(int argc, char **argv)
 
     // initialize the simulation trace dump
     init_trace();
+
+    #ifdef CONFIG_MTRACE
+    init_mtrace();
+    #endif
 
     #ifdef CONFIG_FTRACE
     //initialize the ftrace

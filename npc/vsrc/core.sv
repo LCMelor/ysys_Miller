@@ -1,4 +1,7 @@
 import "DPI-C" function void stop_sim(input bit stop, input int ret_value);
+import "DPI-C" function int pmem_read_sim(input int paddr);
+import "DPI-C" function void pmem_write(
+  input int waddr, input int wdata, input byte wmask);
 module core(
   input clk,
   input rst,
@@ -7,7 +10,7 @@ module core(
   output [31:0] fetch_PC
 );
 
-  wire  alu_opcode;
+  wire [9:0] alu_opcode;
   wire [31:0] alu_src1;
   wire [31:0] alu_src2;
   wire [31:0] alu_res;
@@ -21,8 +24,31 @@ module core(
   wire [31:0] jump_addr;
   wire [31:0] pc;
 
+  wire mem_valid;
+  wire mem_wen;
+  wire [31:0] raddr;
+  wire [31:0] waddr;
+  wire [7:0] mem_wmask;
+  wire [31:0] mem_wdata;
+  reg [31:0] mem_rdata;
+
   always @(*) begin
     stop_sim(stop, ret_value);
+  end
+
+  assign raddr = alu_res;
+  assign waddr = alu_res;
+
+  always @(negedge clk) begin
+    if (mem_valid) begin // 有读写请求时
+      mem_rdata <= pmem_read_sim(raddr);
+      if (mem_wen) begin // 有写请求时
+        pmem_write(waddr, mem_wdata, mem_wmask);
+      end
+    end
+    else begin
+      mem_rdata <= 0;
+    end
   end
 
   export "DPI-C" function get_sv_reg;
@@ -62,6 +88,13 @@ module core(
       .alu_src1   (alu_src1   ),
       .alu_src2   (alu_src2   ),
       .alu_res    (alu_res    ),
+      .mem_addr   (alu_res    ),
+      .mem_rdata  (mem_rdata  ),
+      .mem_wdata  (mem_wdata  ),
+      .mem_wmask  (mem_wmask  ),
+      .mem_wen    (mem_wen    ),
+      .mem_valid  (mem_valid  ),
+      .b_target   (alu_res    ),
       .stop       (stop       ),
       .ret_value  (ret_value  ),
       .regs       (regs       )

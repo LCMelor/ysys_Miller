@@ -3,10 +3,35 @@
 
 extern cpu_state cpu;
 
-/* ------------------ itrace -----------------*/
+/* ------------------ ITRACE -----------------*/
 
+/* ------------------ MTRACE -----------------*/
+FILE *mtrace_fp = NULL;
 
-/* ------------------ ftrace -----------------*/
+void init_mtrace()
+{
+    const char *mtrace_file = "/home/miller/ysyx-workbench/npc/build/core/mtrace.log";
+
+    mtrace_fp = fopen(mtrace_file, "w");
+    Assert(mtrace_fp, "Can not open '%s'", mtrace_file);
+    Log("Mtrace log is written to %s", mtrace_file);
+}
+
+void mtrace_write(uint32_t addr, int len, uint32_t data)
+{
+    Assert(mtrace_fp, "Mtrace log is not initialized");
+    fprintf(mtrace_fp, "Inst PC " FMT_WORD " Write  to " FMT_PADDR " with len %d: 0x%08x\n", cpu.pc, addr, len, data);
+    fflush(mtrace_fp);
+}
+
+void mtrace_read(uint32_t addr, int len, uint32_t data)
+{
+    Assert(mtrace_fp, "Mtrace log is not initialized");
+    fprintf(mtrace_fp, "Inst PC " FMT_WORD " Read from " FMT_PADDR " with len %d: 0x%08x\n", cpu.pc, addr, len, data);
+    fflush(mtrace_fp);
+}
+
+/* ------------------ FTRACE -----------------*/
 #define MAX_FUN_TRACE 32
 
 static fun_info fun_trace[MAX_FUN_TRACE];

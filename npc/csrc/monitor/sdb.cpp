@@ -14,8 +14,15 @@ static int cmd_x(char *args);
 void reg_display();
 void get_reg();
 
+static bool is_batch_mode = false;
+
 
 #define NR_CMD (sizeof(cmd_table) / sizeof(cmd_table[0]))
+
+void set_batch()
+{
+    is_batch_mode = true;
+}
 static struct {
     const char *name;
     const char *despription;
@@ -70,7 +77,7 @@ static int cmd_x(char *args)
 
     uint32_t addr = strtol(arg, NULL, 0);
 
-    uint32_t val = pmem_read(addr, 4);
+    uint32_t val = pmem_read(addr);
     printf(FMT_PADDR":" FMT_PADDR "\n", addr, val);
 
     return 0;
@@ -106,6 +113,10 @@ static char *rl_gets()
 
 void sdb_mainloop()
 {
+    if(is_batch_mode) {
+        cmd_continue(NULL);
+        return ;
+    }
     for(char *cmd; (cmd = rl_gets()) != NULL;)
     {
         char *args = strtok(cmd, " ");

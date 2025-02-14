@@ -19,6 +19,7 @@ CFLAGS += -DMAINARGS_MAX_LEN=$(MAINARGS_MAX_LEN) -DMAINARGS_PLACEHOLDER=\""$(MAI
 
 NPCARGS += -l $(shell dirname $(IMAGE).elf)/npc-log.txt
 NPCARGS += -e $(IMAGE).elf
+NPCARGS += -b
 
 insert-arg: image
 	@python $(AM_HOME)/tools/insert-arg.py $(IMAGE).bin $(MAINARGS_MAX_LEN) "$(MAINARGS_PLACEHOLDER)" "$(mainargs)"

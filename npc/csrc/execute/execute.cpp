@@ -29,14 +29,17 @@ static void single_cycle()
   top.clk = 1;
   int pc = top.fetch_PC;
   top.eval();
-  top.inst = pmem_read(pc, 4);
+  top.inst = pmem_read(pc);
   top.eval();
   tfp->dump(context_p.time());
   context_p.timeInc(1);
 
+  // update status of cpu in sim
   cpu.pc = pc;
   cpu.inst = top.inst;
   get_reg();
+  // void reg_display();
+  // reg_display();
 }
 
 static void inst_disasm()
@@ -99,6 +102,7 @@ static void npc_exe(uint32_t n)
     }
 
     if (stop_flag){
+      npc_state.halt_pc = cpu.pc;
       if(npc_state.halt_ret != 0) {
         npc_state.state = NPC_ABORT;
       } else {

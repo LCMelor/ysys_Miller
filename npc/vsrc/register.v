@@ -4,8 +4,10 @@ module register (
     input wen,
     input [4:0] waddr,
     input [31:0] wdata,
-    input [4:0] raddr,
-    output [31:0] rdata,
+    input [4:0] raddr1,
+    input [4:0] raddr2,
+    output [31:0] rdata1,
+    output [31:0] rdata2,
     output [31:0] ret_value,
     // DPI-C
     output [31:0] regs [31:0]
@@ -27,7 +29,8 @@ module register (
         end
     end
 
-    assign rdata = raddr == 0 ? 0 : rf[raddr];
+    assign rdata1 = raddr1 == 0 ? 0 : rf[raddr1];
+    assign rdata2 = raddr2 == 0 ? 0 : rf[raddr2];
 
     assign ret_value = rf[10];
     
