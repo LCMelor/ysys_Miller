@@ -179,7 +179,7 @@ static int cmd_w(char *args)
   int exp_len = strlen(exp);
 
   WP *wp_ptr = new_wp();
-  strncpy(wp_ptr->exp, exp, exp_len);
+  memcpy(wp_ptr->exp, exp, exp_len);
   wp_ptr->exp[exp_len] = '\0';
 
   bool success;
