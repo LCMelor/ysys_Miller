@@ -36,4 +36,11 @@ void parse_elf(const char *elf_file);
 void init_ftrace();
 
 void ftrace_write(vaddr_t pc, vaddr_t tar_pc);
+
+/* -----------dtrace----------- */
+void init_dtrace();
+
+void dtrace_write(paddr_t addr, int len, word_t data, const char *str);
+
+void dtrace_read(paddr_t addr, int len, word_t data, const char *str);
 #endif

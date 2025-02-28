@@ -53,7 +53,7 @@ typedef struct
     char fun_name[128];
 }fun_info;
 
-#define MAX_FUN_TRACE 32
+#define MAX_FUN_TRACE 2048
 
 static fun_info fun_trace[MAX_FUN_TRACE];
 static int ft_num = 0;
@@ -134,6 +134,7 @@ void parse_elf(const char *elf_file)
         assert(ret == 1);
         if((ELF32_ST_TYPE(symtab_entry.st_info)) == STT_FUNC)
         {
+            assert(ft_num < MAX_FUN_TRACE);
             char *name = &strtab[symtab_entry.st_name];
             fun_trace[ft_num].fun_strat = symtab_entry.st_value;
             fun_trace[ft_num].fun_size = symtab_entry.st_size;
@@ -182,4 +183,30 @@ void ftrace_write(vaddr_t pc, vaddr_t tar_pc)
             break;
         }
     }
-}   
+}
+
+/* -------------- DTRACE -------------- */
+FILE *dtrace_fp = NULL;
+
+void init_dtrace()
+{
+    const char *dtrace_file = "/home/miller/ysyx-workbench/nemu/build/dtrace.log";
+
+    dtrace_fp = fopen(dtrace_file, "w");
+    Assert(dtrace_fp, "Can not open %s", dtrace_file);
+    Log("Dtrace log is written to %s", dtrace_file);
+}
+
+void dtrace_write(paddr_t addr, int len, word_t data, const char *str)
+{
+    Assert(dtrace_fp, "Dtrace log is not initialized");
+    fprintf(dtrace_fp, "%s: Write to " FMT_PADDR " with len %d:" FMT_WORD "\n", str, addr, len, data);
+    fflush(dtrace_fp);
+}
+
+void dtrace_read(paddr_t addr, int len, word_t data, const char *str)
+{
+    Assert(dtrace_fp, "Dtrace log is not initialized");
+    fprintf(dtrace_fp, "%s: Read from " FMT_PADDR " with len %d:" FMT_WORD "\n", str, addr, len, data);
+    fflush(dtrace_fp);
+}

@@ -109,6 +109,9 @@ void init_monitor(int argc, char *argv[]) {
   /* Open the Ftrace log file */
   IFDEF(CONFIG_FTRACE, init_ftrace());
 
+  /* Open the Dtrace log file */
+  IFDEF(CONFIG_DTRACE, init_dtrace());
+
   /* Initialize memory. */
   init_mem();
 
