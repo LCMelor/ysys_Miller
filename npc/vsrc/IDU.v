@@ -18,6 +18,7 @@ module IDU (
         output [7:0] mem_wmask,
         output mem_wen,
         output mem_valid,
+        output mem_ren,
         // from EXU
         input [31:0] b_target,
         // to stop sim & judge status
@@ -177,6 +178,7 @@ module IDU (
     wire [31:0] sb_data;
 
     assign mem_valid = inst_load | inst_store;
+    assign mem_ren = inst_load;
     assign mem_wen = inst_store;
     assign mem_wmask = ({8{inst_lw | inst_sw}} & 8'b00001111) |
                 ({8{inst_lh| inst_sh | inst_lhu}} & 8'b00000011) |

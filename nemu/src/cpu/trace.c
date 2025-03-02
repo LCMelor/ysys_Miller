@@ -128,13 +128,13 @@ void parse_elf(const char *elf_file)
     // traverse the signal table
     fseek(fp, symtab_off, SEEK_SET);
     Elf32_Sym symtab_entry;
+    assert(symtab_num < MAX_FUN_TRACE);
     for(int i = 0; i < symtab_num; i++)
     {
         ret = fread(&symtab_entry, sizeof(Elf32_Sym), 1, fp);
         assert(ret == 1);
         if((ELF32_ST_TYPE(symtab_entry.st_info)) == STT_FUNC)
         {
-            assert(ft_num < MAX_FUN_TRACE);
             char *name = &strtab[symtab_entry.st_name];
             fun_trace[ft_num].fun_strat = symtab_entry.st_value;
             fun_trace[ft_num].fun_size = symtab_entry.st_size;

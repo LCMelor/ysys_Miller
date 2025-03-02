@@ -3,8 +3,15 @@
 
 #include <mem.h>
 #include <trace.h>
+#include <time.h>
 
+#define RTC_MMIO 0xa0000048
+#define SERIAL_MMIO 0xa00003f8
+
+uint64_t get_time();
+uint64_t us = 0;
 static uint8_t *pmem = NULL;
+
 
 uint8_t* guest_to_host(uint32_t paddr)
 {
@@ -44,8 +51,18 @@ uint32_t pmem_read(uint32_t paddr)
   return *(uint32_t*)(pmem + paddr - PMEM_MBASE);
 }
 
-int pmem_read_sim(int raddr)
+uint32_t pmem_read_sim(int raddr)
 {
+  if(raddr == RTC_MMIO || raddr == RTC_MMIO + 4) {
+    if(raddr == RTC_MMIO) {
+      us = get_time();
+      return (uint32_t)us;
+    }
+    else {
+      return us >> 32;
+    }
+  }
+
   int raddr_t = raddr & ~0x3u;
   if(in_mem(raddr)) {
     #ifdef CONFIG_MTRACE
@@ -62,6 +79,12 @@ int pmem_read_sim(int raddr)
 void pmem_write(int waddr, int wdata, char wmask)
 {
   uint8_t *p_mem = guest_to_host(waddr);
+
+  if(waddr == SERIAL_MMIO && wmask == 0x1) {
+    uint8_t *ch = (uint8_t*)&wdata;
+    putchar(*ch);
+    return;
+  }
 
   if(in_mem(waddr)) {
     #ifdef CONFIG_MTRACE

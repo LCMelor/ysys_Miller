@@ -32,7 +32,7 @@ void mtrace_read(uint32_t addr, int len, uint32_t data)
 }
 
 /* ------------------ FTRACE -----------------*/
-#define MAX_FUN_TRACE 32
+#define MAX_FUN_TRACE 4096
 
 static fun_info fun_trace[MAX_FUN_TRACE];
 static int ft_num = 0;
@@ -100,6 +100,7 @@ void parse_elf(const char *elf_file)
 
     // read the string table
     char *strtab = (char *)malloc(strtab_size);
+    assert(strtab);
     fseek(fp, strtab_off, SEEK_SET);
     ret = fread(strtab, strtab_size, 1, fp);
     assert(ret == 1);
@@ -107,6 +108,7 @@ void parse_elf(const char *elf_file)
     // traverse the signal table
     fseek(fp, symtab_off, SEEK_SET);
     Elf32_Sym symtab_entry;
+    assert(symtab_num < MAX_FUN_TRACE);
     for(int i = 0; i < symtab_num; i++)
     {
         ret = fread(&symtab_entry, sizeof(Elf32_Sym), 1, fp);
@@ -116,6 +118,8 @@ void parse_elf(const char *elf_file)
             char *name = &strtab[symtab_entry.st_name];
             fun_trace[ft_num].fun_strat = symtab_entry.st_value;
             fun_trace[ft_num].fun_size = symtab_entry.st_size;
+
+            assert(strlen(name) < 128);
             strcpy(fun_trace[ft_num].fun_name, name);
             ft_num++;
         }
