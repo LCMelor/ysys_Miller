@@ -112,6 +112,9 @@ void init_monitor(int argc, char *argv[]) {
   /* Open the Dtrace log file */
   IFDEF(CONFIG_DTRACE, init_dtrace());
 
+  /* Open the Etrace log file */
+  IFDEF(CONFIG_ETRACE, init_etrace());
+
   /* Initialize memory. */
   init_mem();
 

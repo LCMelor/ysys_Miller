@@ -210,3 +210,23 @@ void dtrace_read(paddr_t addr, int len, word_t data, const char *str)
     fprintf(dtrace_fp, "%s: Read from " FMT_PADDR " with len %d:" FMT_WORD "\n", str, addr, len, data);
     fflush(dtrace_fp);
 }
+
+/* -------------- ETRACE -------------- */
+FILE *etrace_fp = NULL;
+
+void init_etrace()
+{
+    const char *etrace_file = "/home/miller/ysyx-workbench/nemu/build/etrace.log";
+
+    etrace_fp = fopen(etrace_file, "w");
+    Assert(etrace_fp, "Can not open %s", etrace_file);
+    Log("Etrace log is written to %s", etrace_file);
+}
+
+void etrace_write(vaddr_t mepc, vaddr_t mtvec, vaddr_t mcause)
+{
+    Assert(etrace_fp, "Etrace log is not initialized");
+
+    fprintf(etrace_fp, "PC:" FMT_WORD " triggered exception, mtvec = " FMT_WORD ", mcause = " FMT_WORD "\n", mepc, mtvec, mcause);
+    fflush(etrace_fp);
+}

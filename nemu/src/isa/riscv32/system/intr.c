@@ -14,13 +14,31 @@
 ***************************************************************************************/
 
 #include <isa.h>
+#define csr(idx) (cpu.csr[csr_map(idx)])
+extern void etrace_write(vaddr_t mepc, vaddr_t mtvec, vaddr_t mcause);
+
+int csr_map(int csr_num) {
+  switch(csr_num) {
+    case 0x300: return 0; // mstatus
+    case 0x341: return 1; // mepc
+    case 0x342: return 2; // mcause
+    case 0x305: return 3; // mtvec
+    default: Assert(0, "csr num invalid is %x\n", csr_num);
+  }
+  return -1;
+}
 
 word_t isa_raise_intr(word_t NO, vaddr_t epc) {
   /* TODO: Trigger an interrupt/exception with ``NO''.
    * Then return the address of the interrupt/exception vector.
    */
-
-  return 0;
+  #ifdef CONFIG_ETRACE
+  etrace_write(epc, csr(CSR_MTVEC), NO);
+  #endif
+  
+  csr(CSR_MEPC) = epc;
+  csr(CSR_MCAUSE) = NO;
+  return csr(CSR_MTVEC);
 }
 
 word_t isa_query_intr() {

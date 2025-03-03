@@ -43,4 +43,9 @@ void init_dtrace();
 void dtrace_write(paddr_t addr, int len, word_t data, const char *str);
 
 void dtrace_read(paddr_t addr, int len, word_t data, const char *str);
+
+/* -----------dtrace----------- */
+void init_etrace();
+
+void etrace_write(vaddr_t mepc, vaddr_t mtvec, vaddr_t mcause);
 #endif
