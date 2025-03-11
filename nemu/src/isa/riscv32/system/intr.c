@@ -17,7 +17,7 @@
 #define csr(idx) (cpu.csr[csr_map(idx)])
 extern void etrace_write(vaddr_t mepc, vaddr_t mtvec, vaddr_t mcause);
 
-int csr_map(int csr_num) {
+inline int csr_map(int csr_num) {
   switch(csr_num) {
     case 0x300: return 0; // mstatus
     case 0x341: return 1; // mepc

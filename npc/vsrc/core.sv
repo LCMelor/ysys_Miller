@@ -33,6 +33,17 @@ module core(
   wire [31:0] mem_wdata;
   reg [31:0] mem_rdata;
 
+  // csr
+  wire [11:0] csr_addr;
+  wire [31:0] csr_wdata;
+  wire csr_wen;
+  wire [31:0] csr_rdata;
+  wire csr_ecall;
+  wire csr_mret;
+  wire [31:0] csr_mtvec;
+  wire [31:0] csr_mepc;
+  wire [31:0] csr_rdata;
+
   always @(*) begin
     stop_sim(stop, ret_value);
   end
@@ -61,12 +72,12 @@ module core(
 
   export "DPI-C" function jump_flag;
   function bit jump_flag();
-        return jump;
+        return jump || csr_ecall || csr_mret;
   endfunction
 
   export "DPI-C" function jump_target;
   function int jump_target();
-        return jump_addr;
+        return fetch_PC;
   endfunction
 
 
@@ -76,7 +87,11 @@ module core(
       .fetch_PC (fetch_PC ),
       .jump     (jump     ),
       .jump_addr(jump_addr),
-      .pc       (pc       )
+      .pc       (pc       ),
+      .csr_ecall(csr_ecall),
+      .csr_mret (csr_mret ),
+      .csr_mtvec(csr_mtvec),
+      .csr_mepc (csr_mepc )
   );
   
   IDU u_IDU(
@@ -98,6 +113,12 @@ module core(
       .mem_valid  (mem_valid  ),
       .mem_ren    (mem_ren    ),
       .b_target   (alu_res    ),
+      .csr_addr   (csr_addr   ),
+      .csr_wdata  (csr_wdata  ),
+      .csr_rdata  (csr_rdata ),
+      .csr_wen    (csr_wen    ),
+      .csr_ecall  (csr_ecall  ),
+      .csr_mret   (csr_mret   ),
       .stop       (stop       ),
       .ret_value  (ret_value  ),
       .regs       (regs       )
@@ -109,5 +130,19 @@ module core(
       .src2   (alu_src2   ),
       .res    (alu_res    )
   );
+
+  csr u_csr(
+      .clk       (clk       ),
+      .rst       (rst       ),
+      .csr_addr  (csr_addr  ),
+      .csr_wdata (csr_wdata ),
+      .csr_wen   (csr_wen   ),
+      .csr_rdata (csr_rdata ),
+      .pc        (pc        ),
+      .csr_ecall (csr_ecall ),
+      .csr_mtvec (csr_mtvec ),
+      .csr_mepc  (csr_mepc  )
+  );
+  
   
 endmodule

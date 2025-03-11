@@ -74,7 +74,12 @@ static int parse_args(int argc, char **argv)
     switch(o)
     {
       case 'l': log_file = optarg; break;
-      case 'e': parse_elf(optarg); break;
+      case 'e': {
+        #ifdef CONFIG_FTRACE
+        parse_elf(optarg); 
+        #endif
+        break;
+      }
       case 'd': diff_so_file = optarg; break;
       case 'b': set_batch(); break;
       case 1: img_file = optarg; break;

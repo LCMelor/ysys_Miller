@@ -21,6 +21,13 @@ module IDU (
         output mem_ren,
         // from EXU
         input [31:0] b_target,
+        // to & from csr
+        output [11:0] csr_addr,
+        output [31:0] csr_wdata,
+        input [31:0] csr_rdata,
+        output csr_wen,
+        output csr_ecall,
+        output csr_mret,
         // to stop sim & judge status
         output stop,
         output [31:0] ret_value,
@@ -34,12 +41,14 @@ module IDU (
     wire [4:0] rs1;
     wire [4:0] rs2;
     wire [4:0] rd;
+    // wire [4:0] zimm;
     wire [11:0] imm;
     wire [31:0] I_imm;
     wire [31:0] U_imm;
     wire [31:0] J_imm;
     wire [31:0] S_imm;
     wire [31:0] B_imm;
+    wire [31:0] CSR_imm;
 
     // control
     wire inst_I_type;
@@ -51,7 +60,13 @@ module IDU (
     wire inst_auipc;
     wire inst_lui;
     wire inst_jalr;
+    wire inst_CSR_type;
     wire inst_ebreak;
+    wire inst_ecall;
+    wire inst_mret;
+
+    wire inst_csrrs;
+    wire inst_csrrw;
 
     wire inst_add;
     wire inst_sub;
@@ -108,12 +123,24 @@ module IDU (
     assign rs1 = inst[19:15];
     assign rs2 = inst[24:20];
     assign rd = inst[11:7];
+    // assign zimm = inst[19:15];
     assign imm = inst[31:20];
     assign I_imm = {{20{inst[31]}},inst[31:20]};
     assign U_imm = {inst[31:12],12'b0};
     assign J_imm = {{11{inst[31]}},inst[31],inst[19:12],inst[20],inst[30:21], 1'b0};
     assign S_imm = {{20{inst[31]}}, inst[31:25], inst[11:7]};
     assign B_imm = {{19{inst[31]}}, inst[31], inst[7], inst[30:25], inst[11:8], 1'b0};
+    // assign CSR_imm = {27'b0, zimm};
+
+    // csr 
+    assign csr_addr = inst[31:20];
+    assign csr_wen = inst_csrrw || inst_csrrs;
+    assign csr_wdata = inst_csrrs ? (csr_rdata | rf_rdata1) : rf_rdata1;
+    assign csr_ecall = inst_ecall;
+    assign csr_mret = inst_mret;
+
+    assign inst_csrrs = inst_CSR_type && fun3 == 3'b010;
+    assign inst_csrrw = inst_CSR_type && fun3 == 3'b001;
 
     // control
     assign inst_I_type = opcode == 7'b0010011;
@@ -125,7 +152,10 @@ module IDU (
     assign inst_auipc = opcode == 7'b0010111;
     assign inst_lui = opcode == 7'b0110111;
     assign inst_jalr = opcode == 7'b1100111 && fun3 == 3'b000;
-    assign inst_ebreak = opcode == 7'b1110011 && fun3 == 3'b000 && rd == 5'b00000 && rs1 == 5'b00000 && imm == 12'b000000000001;
+    assign inst_CSR_type = opcode == 7'b1110011;
+    assign inst_ebreak = inst_CSR_type && fun3 == 3'b000 && rd == 5'b00000 && rs1 == 5'b00000 && imm == 12'b000000000001;
+    assign inst_ecall = inst_CSR_type && fun3 == 3'b000 && rd == 5'b00000 && rs1 == 5'b00000 && imm == 12'b000000000000;
+    assign inst_mret = inst_CSR_type && rd == 5'b00000 && fun3 == 3'b000 && rs1 == 5'b00000 && rs2 == 5'b00010 && fun7 == 7'b0011000;
 
     assign seq_pc = inst_pc + 32'h4;
 
@@ -275,9 +305,10 @@ module IDU (
     assign rf_raddr1 = rs1;
     assign rf_raddr2 = rs2;
     assign rf_waddr = rd;
-    assign rf_wen = inst_I_type || inst_auipc || inst_lui || inst_jalr || inst_J_type || inst_R_type || inst_load;
+    assign rf_wen = inst_I_type || inst_auipc || inst_lui || inst_jalr || inst_J_type || inst_R_type || inst_load || inst_csrrw || inst_csrrs;
     assign rf_wdata = (inst_jalr | inst_J_type) ? seq_pc : 
-                        inst_load ? load_data : alu_res;
+                        inst_load ? load_data : 
+                        (inst_csrrw | inst_csrrs) ? csr_rdata : alu_res;
     register u_register(
                 .clk   (clk   ),
                 .rst   (rst   ),
